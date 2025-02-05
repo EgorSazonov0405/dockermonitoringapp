@@ -1,24 +1,18 @@
+.main_container {
+    width: 80%; 
+    max-width: 600px;
+    padding: 20px;
+    box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
+    background-color: #fff;
+    border-radius: 8px;
+}
 body {
-    background-color: #f8f9fa;
-}
-.card {
-    background-color: #f0f0f0;
-    transition: transform 0.2s;
-    justify-content: center;
-    align-self: center;
     display: flex;
-    border-radius: 20px;
-    width: 5%;
-    text-align: center;
-    max-width: 300px;
-    cursor: default;
+    justify-content: center;
+    align-items: center; 
+    height: 100vh;
+    margin: 0; 
 }
-
-.card-title {
-    font-size: 1.2em;
-
-}
-
 .bg-success {
     color: green;
 }
@@ -32,4 +26,67 @@ body {
     flex-direction: row;
     justify-content: center;
     gap: 1%;
+}
+.text-center {
+    text-align: center;
+    width: 100%;
+    margin-bottom: 20px;
+    font-size: 24px;
+    font-weight: bold;
+}
+
+
+.input-row {
+    display: flex;
+    gap: 10px;
+    margin-bottom: 20px;
+}
+
+
+.input-row input {
+
+    padding: 10px; 
+    border: 1px solid #ccc;
+    border-radius: 4px;
+    flex: 1;
+    min-width: 0; 
+}
+
+.input-row button {
+
+    padding: 10px 15px;
+    background-color: #3498db;
+    color: white;
+    border: none; 
+    border-radius: 4px; 
+    cursor: pointer;
+    transition: background-color 0
+}
+.input-row button {
+    padding: 10px 15px; 
+    background-color: #3498db; 
+    color: white;
+    border: none; 
+    border-radius: 4px;
+    cursor: pointer; 
+    transition: background-color 0.3s;
+}
+
+.input-row button:hover {
+    background-color: #2980b9; 
+}
+
+.data-list {
+    margin-top: 20px;
+}
+
+.data-entry {
+    display: flex;
+    justify-content: space-between; 
+    padding: 10px;
+    border-bottom: 1px solid #ccc;
+}
+
+.data-entry:last-child {
+    border-bottom: none;
 }
