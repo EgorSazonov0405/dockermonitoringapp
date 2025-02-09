@@ -1,39 +1,68 @@
 package main
 
 import (
+	"encoding/json"
+	"github.com/rs/cors"
 	"net/http"
-
-	"github.com/gin-contrib/cors"
-	"github.com/gin-gonic/gin"
+	"os/exec"
+	"sync"
 )
 
-type container struct {
-	ID     string `json:"id"`
-	Name   string `json:"name"`
+type PingRequest struct {
+	IP   string `json:"ip"`
+	Time int    `json:"time"`
+}
+
+type PingResponse struct {
 	IP     string `json:"ip"`
 	Status string `json:"status"`
 }
 
-var containers = []container{
-	{ID: "1", Name: "1", IP: "192.168.0.1", Status: "running"},
-	{ID: "2", Name: "2", IP: "192.168.0.2", Status: "running"},
-	{ID: "3", Name: "3", IP: "192.168.0.3", Status: "running"},
-	{ID: "4", Name: "4", IP: "192.168.0.4", Status: "running"},
-	{ID: "5", Name: "5", IP: "192.168.0.5", Status: "running"},
-	{ID: "6", Name: "6", IP: "192.168.0.6", Status: "running"},
+func ping(ip string) (string, error) {
+	cmd := exec.Command("ping", "-c", "1", ip) // Для Windows используйте "ping", "-n", "1"
+	err := cmd.Run()
+	if err != nil {
+		return "error", err
+	}
+	return "ok", nil
 }
 
-func getContainers(c *gin.Context) {
-	c.IndentedJSON(http.StatusOK, containers)
+func pingHandler(w http.ResponseWriter, r *http.Request) {
+	var requests []PingRequest
+	if err := json.NewDecoder(r.Body).Decode(&requests); err != nil {
+		http.Error(w, err.Error(), http.StatusBadRequest)
+		return
+	}
+
+	var wg sync.WaitGroup
+	responses := make([]PingResponse, len(requests))
+
+	for i, request := range requests {
+		wg.Add(1)
+		go func(i int, req PingRequest) {
+			defer wg.Done()
+			status, _ := ping(req.IP)
+			responses[i] = PingResponse{IP: req.IP, Status: status}
+		}(i, request)
+	}
+
+	wg.Wait()
+	w.Header().Set("Content-Type", "application/json")
+	json.NewEncoder(w).Encode(responses)
 }
 
 func main() {
-	router := gin.Default()
+	mux := http.NewServeMux()
+	mux.HandleFunc("/api/ping", pingHandler)
 
-	// Включаем CORS middleware
-	router.Use(cors.Default())
+	// Настройка CORS
+	c := cors.New(cors.Options{
+		AllowedOrigins:   []string{"http://localhost:5173"}, // Замените на ваш фронтенд
+		AllowCredentials: true,
+		AllowedMethods:   []string{"GET", "POST", "OPTIONS"},
+		AllowedHeaders:   []string{"Content-Type"},
+	})
 
-	router.GET("/containers", getContainers)
-
-	router.Run("localhost:8080")
+	handler := c.Handler(mux)
+	http.ListenAndServe(":8080", handler)
 }

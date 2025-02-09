@@ -1,37 +1,59 @@
-import React,{useState} from 'react';
-import { useFetchContainers } from './hooks/useFetchContainers';
-import ContainerList from './components/ContainerList';
-import InputRow from './components/InputRow';
+import React, { useState } from 'react';
+import axios from 'axios';
+
+interface PingRequest {
+    ip: string;
+    time: number;
+}
+
+interface PingResponse {
+    ip: string;
+    status: string;
+}
 
 const App: React.FC = () => {
-  const { containers, loading, error } = useFetchContainers(5000);
-  const [data, setData] = useState<Entry[]>([]);
+    const [ip, setIp] = useState<string>('');
+    const [time, setTime] = useState<number>(0);
+    const [results, setResults] = useState<PingResponse[]>([]);
 
-  const handleAdd = (newEntry: Entry) => {
-      setData([...data, newEntry]);
-  };
+    const handlePing = async () => {
+        try {
+            const response = await axios.post<PingResponse[]>('http://localhost:8080/api/ping', [
+                { ip, time },
+            ]);
+            setResults(response.data);
+        } catch (error) {
+            console.error('Error pinging IP:', error);
+        }
+    };
 
-  if (loading) return <div>Loading...</div>;
+    return (
+        <div>
+            <h1>IP Pinger</h1>
+            <input
+                type="text"
+                placeholder="Введите IP адрес"
+                value={ip}
+                onChange={(e) => setIp(e.target.value)}
+            />
+            <input
+                type="number"
+                placeholder="Введите время пинга (мс)"
+                value={time}
+                onChange={(e) => setTime(Number(e.target.value))}
+            />
+            <button onClick={handlePing}>Пинговать</button>
 
-  if (error) return <div>Error: {error}</div>;
-
-  return (
-    <div className="main_container">
-      <h1 className="text-center">Docker Container Monitor</h1>
-      <InputRow onAdd={handleAdd} />
-            <div className="data-list">
-                {data.map((entry, index) => (
-                    <div key={index} className="data-entry">
-                        <span>{entry.name}</span>
-                        <span>{entry.ipAddress}</span>
-                        <span>{entry.pingTime}</span>
-                        <span>{entry.status}</span>
-                    </div>
+            <h2>Результаты:</h2>
+            <ul>
+                {results.map((result) => (
+                    <li key={result.ip}>
+                        {result.ip}: {result.status}
+                    </li>
                 ))}
-            </div>
-        <ContainerList containers={containers} />
-    </div>
-  );
+            </ul>
+        </div>
+    );
 };
 
 export default App;
